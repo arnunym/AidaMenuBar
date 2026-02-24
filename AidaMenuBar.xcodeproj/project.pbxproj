@@ -15,6 +15,9 @@
 		008 /* SettingsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110 /* SettingsManager.swift */; };
 		4C69F9172F3DEEA600D54ED0 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C69F9162F3DEEA600D54ED0 /* LoginView.swift */; };
 		4C69F9182F3DEEA600D54ED0 /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C69F9152F3DEEA600D54ED0 /* KeychainService.swift */; };
+		4C6FFBC72F4DE38D006A6A3C /* UpdateChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C6FFBC62F4DE38D006A6A3C /* UpdateChecker.swift */; };
+		4C6FFBC92F4DEE3F006A6A3C /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C6FFBC82F4DEE3F006A6A3C /* L10n.swift */; };
+		4C6FFBCB2F4DF034006A6A3C /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 4C6FFBCA2F4DF034006A6A3C /* Localizable.xcstrings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -29,6 +32,9 @@
 		110 /* SettingsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsManager.swift; sourceTree = "<group>"; };
 		4C69F9152F3DEEA600D54ED0 /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
 		4C69F9162F3DEEA600D54ED0 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		4C6FFBC62F4DE38D006A6A3C /* UpdateChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateChecker.swift; sourceTree = "<group>"; };
+		4C6FFBC82F4DEE3F006A6A3C /* L10n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = L10n.swift; sourceTree = "<group>"; };
+		4C6FFBCA2F4DF034006A6A3C /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -53,6 +59,8 @@
 		301 /* AidaMenuBar */ = {
 			isa = PBXGroup;
 			children = (
+				4C6FFBC82F4DEE3F006A6A3C /* L10n.swift */,
+				4C6FFBC62F4DE38D006A6A3C /* UpdateChecker.swift */,
 				4C69F9152F3DEEA600D54ED0 /* KeychainService.swift */,
 				4C69F9162F3DEEA600D54ED0 /* LoginView.swift */,
 				101 /* AidaMenuBarApp.swift */,
@@ -63,6 +71,7 @@
 				105 /* Assets.xcassets */,
 				106 /* AidaMenuBar.entitlements */,
 				108 /* Info.plist */,
+				4C6FFBCA2F4DF034006A6A3C /* Localizable.xcstrings */,
 			);
 			path = AidaMenuBar;
 			sourceTree = "<group>";
@@ -112,11 +121,11 @@
 			};
 			buildConfigurationList = 601 /* Build configuration list for PBXProject "AidaMenuBar" */;
 			compatibilityVersion = "Xcode 14.0";
-			developmentRegion = de;
+			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				de,
-				Base,
+				en,
 			);
 			mainGroup = 300;
 			productRefGroup = 302 /* Products */;
@@ -133,6 +142,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4C6FFBCB2F4DF034006A6A3C /* Localizable.xcstrings in Resources */,
 				005 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -146,10 +156,12 @@
 			files = (
 				001 /* AidaMenuBarApp.swift in Sources */,
 				002 /* ContentView.swift in Sources */,
+				4C6FFBC92F4DEE3F006A6A3C /* L10n.swift in Sources */,
 				003 /* SessionManager.swift in Sources */,
 				004 /* SettingsView.swift in Sources */,
 				008 /* SettingsManager.swift in Sources */,
 				4C69F9172F3DEEA600D54ED0 /* LoginView.swift in Sources */,
+				4C6FFBC72F4DE38D006A6A3C /* UpdateChecker.swift in Sources */,
 				4C69F9182F3DEEA600D54ED0 /* KeychainService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -218,6 +230,7 @@
 				SDKROOT = macosx;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -276,6 +289,7 @@
 				SDKROOT = macosx;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 			};
 			name = Release;
 		};
@@ -288,7 +302,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 65GDNVM3VS;
@@ -307,7 +321,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.1.0;
+				MARKETING_VERSION = 1.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.arnunym.AidaMenuBar;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -324,7 +338,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 65GDNVM3VS;
@@ -343,7 +357,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.1.0;
+				MARKETING_VERSION = 1.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.arnunym.AidaMenuBar;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;

@@ -1,4 +1,5 @@
 {
+  "color-space-for-untagged-svg-colors" : "display-p3",
   "fill" : {
     "solid" : "display-p3:0.08707,0.18456,0.30945,1.00000"
   },

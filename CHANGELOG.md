@@ -1,5 +1,30 @@
 # AIDA MenuBar – Changelog
 
+## v1.2.0 (2026-02-24)
+
+### New Features
+
+- **Real-time flextime balance:** Cumulative flextime account now calculated correctly using `trafficlightstatus` (Flexzeit Vortag) + today's live saldo — instead of the misleading single-day value from `dailyAccValue`
+- **7-day timeline:** New "Past Days" section showing recent workdays in reverse chronological order with compact inline bookings (→08:42 ⏸13:40 ←17:27). Always visible, no collapse needed
+- **Full localization (DE/EN):** Complete German and English translations using Xcode String Catalog (`.xcstrings`). All UI text, error messages, and notifications are bilingual
+- **In-app language switcher:** Choose between System Language, Deutsch, or English in Settings → Display. Also available as 🌐 globe icon on the login screen — no app restart required
+
+### Improvements
+
+- **Simplified timeline:** Replaced collapsible week overview with flat, scrollable layout — today's bookings on top, past days below
+- **Weekday formatting** now follows system/app language instead of hardcoded German locale
+- **README** rewritten in English with centered app icon, badges, and clean project structure
+
+### Technical
+
+- New `L10n.swift` wrapper with `String(localized:)` and manual language override via Bundle
+- `Localizable.xcstrings` with ~60 translation keys
+- `SettingsManager.appLanguage` persisted in UserDefaults
+- `AidaError` cases now use localized strings
+- Flextime refresh timer (5 min) for `trafficlightstatus` endpoint
+
+---
+
 ## v1.1.0 (2026-02-24)
 
 ### New Features

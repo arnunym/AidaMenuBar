@@ -44,7 +44,20 @@ class SettingsManager: ObservableObject {
         didSet { UserDefaults.standard.set(endOfDayReminderHours, forKey: "endOfDayReminderHours") }
     }
     
+    // MARK: - Language
+    @Published var appLanguage: String {
+        didSet {
+            UserDefaults.standard.set(appLanguage, forKey: "appLanguage")
+            L10n.languageOverride = appLanguage == "auto" ? nil : appLanguage
+        }
+    }
+    
     init() {
+        // Language
+        let savedLanguage = UserDefaults.standard.string(forKey: "appLanguage") ?? "auto"
+        self.appLanguage = savedLanguage
+        L10n.languageOverride = savedLanguage == "auto" ? nil : savedLanguage
+        
         // Display
         self.showTimeInMenuBar = UserDefaults.standard.object(forKey: "showTimeInMenuBar") as? Bool ?? true
         
