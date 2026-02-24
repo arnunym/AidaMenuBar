@@ -1,0 +1,41 @@
+{
+  "fill" : {
+    "solid" : "display-p3:0.08707,0.18456,0.30945,1.00000"
+  },
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "fill" : "none",
+          "glass" : false,
+          "hidden" : false,
+          "image-name" : "aida-logo.svg",
+          "name" : "aida-logo",
+          "position" : {
+            "scale" : 2,
+            "translation-in-points" : [
+              0.6700000000000728,
+              -51.2109375
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : [
+      "macOS"
+    ]
+  }
+}
