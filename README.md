@@ -10,9 +10,15 @@
 </p>
 
 <p align="center">
+  <a href="../../releases/latest">
+    <img src="https://img.shields.io/badge/%E2%AC%87%EF%B8%8F_Download-Latest_Release-00875A?style=for-the-badge&logo=apple" alt="Download Latest Release">
+  </a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/github/v/release/arnunym/AidaMenuBar?label=Version&color=blue" alt="Latest Release">
   <img src="https://img.shields.io/badge/Platform-macOS_13+-blue?logo=apple" alt="Platform">
   <img src="https://img.shields.io/badge/Swift-5.9-F05138?logo=swift&logoColor=white" alt="Swift">
-  <img src="https://img.shields.io/badge/SwiftUI-4.0-007AFF?logo=swift&logoColor=white" alt="SwiftUI">
   <img src="https://img.shields.io/badge/License-GPL--2.0-blue" alt="License">
   <img src="https://img.shields.io/badge/Language-DE%20%7C%20EN-green" alt="Language">
 </p>
