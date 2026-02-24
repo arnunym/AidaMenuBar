@@ -20,6 +20,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, @unchecked Sendable, UNUserN
     @MainActor var popover: NSPopover!
     @MainActor let sessionManager = SessionManager()
     @MainActor let settingsManager = SettingsManager()
+    @MainActor let updateChecker = UpdateChecker()
     
     @MainActor private var cancellables = Set<AnyCancellable>()
     @MainActor private var eventMonitor: Any?
@@ -144,6 +145,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, @unchecked Sendable, UNUserN
             rootView: ContentView()
                 .environmentObject(sessionManager)
                 .environmentObject(settingsManager)
+                .environmentObject(updateChecker)
         )
     }
     
@@ -265,6 +267,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, @unchecked Sendable, UNUserN
             if popover.isShown {
                 popover.performClose(nil)
             } else {
+                // Reset to main view when opening
+                NotificationCenter.default.post(name: .popoverWillOpen, object: nil)
+                
                 // Show popover
                 popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
                 

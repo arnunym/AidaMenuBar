@@ -6,12 +6,13 @@ import Network
 // MARK: - Notification Names
 extension Notification.Name {
     static let sessionExpired = Notification.Name("sessionExpired")
+    static let popoverWillOpen = Notification.Name("popoverWillOpen")
 }
 
 // MARK: - App Version
 struct AppVersion {
-    static let version = "1.1.0"
-    static let build = "2"
+    static let version = "1.2.0"
+    static let build = "3"
     static var fullVersion: String { "\(version) (\(build))" }
 }
 
@@ -63,6 +64,13 @@ class SessionManager: ObservableObject {
     @Published var needsLogin = false
     @Published var lastSessionRefresh: Date?
     
+    // Flextime account (from trafficlightstatus)
+    @Published var flextimeCarryoverMinutes: Int = 0  // Cumulative flextime until yesterday
+    
+    // 7-day data
+    @Published var weeklyTimes: [DayTimeEntry] = []  // Soll/Ist per day for the week
+    @Published var allBookings: [BookingEntry] = []   // All bookings from 7-day window
+    
     // Pause tracking
     @Published var pauseStartTime: Date?
     
@@ -95,9 +103,11 @@ class SessionManager: ObservableObject {
     private var keepAliveTimer: Timer?
     private var refreshTimer: Timer?
     private var liveTimeTimer: Timer?
+    private var flextimeRefreshTimer: Timer?
     private var vpnRetryTimer: Timer?
     private let keepAliveInterval: TimeInterval = 20 * 60  // 20 min
     private let dataRefreshInterval: TimeInterval = 60      // 60 sec (server recalculates each time)
+    private let flextimeRefreshInterval: TimeInterval = 5 * 60  // 5 min (changes once per day)
     private var isFetching = false  // Prevent overlapping fetch calls
     
     // MARK: - Network Monitor
@@ -126,6 +136,20 @@ class SessionManager: ObservableObject {
         let date: Date
         let type: Int  // 1=Kommen, 2=Gehen, 0=Pause
         let typeLabel: String
+    }
+    
+    struct DayTimeEntry: Identifiable {
+        let id = UUID()
+        let date: String       // "2026-02-24"
+        let sollMinutes: Int
+        let istMinutes: Int
+        var saldoMinutes: Int { istMinutes - sollMinutes }
+        var isToday: Bool {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd"
+            return date == formatter.string(from: Date())
+        }
+        var isWeekend: Bool { sollMinutes == 0 && istMinutes == 0 }
     }
     
     // MARK: - Init
@@ -326,6 +350,7 @@ class SessionManager: ObservableObject {
             print("✅ Logged in as \(userName) (Session: \(sessionId.prefix(8))...)")
             
             // Fetch initial data and start timers
+            await fetchFlextimeStatus()
             await fetchBookings()
             startTimers()
             
@@ -364,10 +389,13 @@ class SessionManager: ObservableObject {
         userName = ""
         employeeNumber = ""
         recentBookings = []
+        allBookings = []
+        weeklyTimes = []
         todayWorkedMinutes = 0
         serverWorkedMinutes = 0
         lastDataFetchTime = nil
         saldoMinutes = 0
+        flextimeCarryoverMinutes = 0
         needsLogin = true
         errorMessage = nil
         statusMessage = nil
@@ -571,6 +599,47 @@ class SessionManager: ObservableObject {
         isLoading = false
     }
     
+    // MARK: - Fetch Flextime Status
+    
+    /// Fetches the cumulative flextime balance from trafficlightstatus endpoint
+    func fetchFlextimeStatus() async {
+        guard isAuthenticated else { return }
+        
+        do {
+            let json = try await authenticatedRequest(path: "\(taimsPath)/rpc/trafficlightstatus")
+            
+            guard let dataDict = json["Data"] as? [String: Any],
+                  let accounts = dataDict["Accounts"] as? [[String: Any]] else { return }
+            
+            // Extract "Flexzeit Vortag" value
+            for account in accounts {
+                if let titles = account["title"] as? [String],
+                   titles.contains("Flexzeit Vortag"),
+                   let values = account["values"] as? [String: [Int]] {
+                    // Get the most recent value (should be today's date key)
+                    if let latestValues = values.values.first, let flextime = latestValues.first {
+                        flextimeCarryoverMinutes = flextime
+                        print("✅ Flextime carryover: \(flextime) min (\(flextime / 60):\(String(format: "%02d", abs(flextime) % 60))h)")
+                    }
+                }
+            }
+            
+            // Also extract traffic light status (0=green, 1=yellow, 2=red)
+            // Could be used for UI later
+            
+        } catch {
+            print("❌ Fetch flextime status failed: \(error)")
+        }
+    }
+    
+    // MARK: - Computed: Current Total Flextime
+    
+    /// Real-time flextime: carryover (until yesterday) + today's live saldo
+    var currentFlextimeMinutes: Int {
+        let todaySaldo = liveWorkedMinutes - todaySollMinutes
+        return flextimeCarryoverMinutes + todaySaldo
+    }
+    
     // MARK: - Fetch Bookings
     
     func fetchBookings() async {
@@ -597,12 +666,24 @@ class SessionManager: ObservableObject {
                 isWorking = present
             }
             
-            // Parse Soll/Ist from times array
+            // Parse Soll/Ist from times array – both today AND full week
             if let times = dataDict["times"] as? [[String: Any]] {
                 let todayKey = formatDate(Date())
                 
                 for timeEntry in times {
                     if let values = timeEntry["values"] as? [String: [Int]] {
+                        // Build weekly times array
+                        var weekEntries: [DayTimeEntry] = []
+                        for (dateKey, vals) in values where vals.count >= 2 {
+                            weekEntries.append(DayTimeEntry(
+                                date: dateKey,
+                                sollMinutes: vals[0],
+                                istMinutes: vals[1]
+                            ))
+                        }
+                        weeklyTimes = weekEntries.sorted { $0.date < $1.date }
+                        
+                        // Extract today's values
                         let todayValues = values[todayKey]
                             ?? values[formatDateAlt(Date())]
                             ?? values.first(where: { $0.key.contains(formatDateShort(Date())) })?.value
@@ -615,36 +696,19 @@ class SessionManager: ObservableObject {
                 }
             }
             
-            // Parse Saldo from dailyAccValue
-            if let dailyAccValue = dataDict["dailyAccValue"] as? [[String: Any]] {
-                let todayKey = formatDate(Date())
-                
-                for accGroup in dailyAccValue {
-                    if let accounts = accGroup["Accounts"] as? [[String: Any]] {
-                        for account in accounts {
-                            if let values = account["values"] as? [String: [Int]] {
-                                let sortedDates = values.keys.sorted()
-                                let targetDate = values[todayKey] != nil ? todayKey : (sortedDates.last ?? "")
-                                
-                                if let dayValues = values[targetDate], dayValues.count > 4 {
-                                    saldoMinutes = dayValues[4]
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            // Saldo: we now use trafficlightstatus for the real cumulative flextime
+            // The old dailyAccValue.Saldo was misleading (only showed one past day's saldo)
+            // saldoMinutes is now computed from flextimeCarryoverMinutes + today's difference
+            saldoMinutes = currentFlextimeMinutes
             
-            // Parse bookings for today
+            // Parse ALL bookings from 7-day window
             if let bookings = dataDict["bookings"] as? [[String: Any]] {
                 let today = Calendar.current.startOfDay(for: Date())
                 
-                recentBookings = bookings.compactMap { booking in
+                let allParsed: [BookingEntry] = bookings.compactMap { booking in
                     guard let dateString = booking["Date"] as? String,
                           let typeInfo = booking["TypeInfo"] as? Int,
                           let date = parseBookingDate(dateString) else { return nil }
-                    
-                    guard Calendar.current.startOfDay(for: date) == today else { return nil }
                     
                     let label: String
                     switch typeInfo {
@@ -657,6 +721,11 @@ class SessionManager: ObservableObject {
                     return BookingEntry(date: date, type: typeInfo, typeLabel: label)
                 }
                 .sorted { $0.date > $1.date }
+                
+                allBookings = allParsed
+                
+                // Filter today's bookings for the existing recentBookings
+                recentBookings = allParsed.filter { Calendar.current.startOfDay(for: $0.date) == today }
                 
                 if let last = recentBookings.first {
                     isPaused = (last.type == 0)
@@ -679,7 +748,7 @@ class SessionManager: ObservableObject {
             lastDataFetchTime = Date()
             if isDataStale { isDataStale = false }  // Only publish change if actually stale
             
-            print("✅ Data fetched: server=\(serverWorkedMinutes)min, live=\(liveWorkedMinutes)min")
+            print("✅ Data fetched: server=\(serverWorkedMinutes)min, live=\(liveWorkedMinutes)min, flextime=\(currentFlextimeMinutes)min")
             
         } catch {
             print("❌ Fetch bookings failed: \(error)")
@@ -715,8 +784,8 @@ class SessionManager: ObservableObject {
         
         // Initial notification after the pause time
         let content = UNMutableNotificationContent()
-        content.title = "⏰ Pause beenden"
-        content.body = "Deine \(minutes)-Minuten-Pause ist vorbei. Vergiss nicht, die Pause zu beenden!"
+        content.title = L10n.notifPauseEnd
+        content.body = L10n.notifPauseBody(minutes)
         content.sound = .default
         content.interruptionLevel = .timeSensitive
         content.categoryIdentifier = "PAUSE_REMINDER"
@@ -733,8 +802,8 @@ class SessionManager: ObservableObject {
         // Follow-up reminders every 5 minutes to stay persistent
         for i in 1...6 {
             let followUp = UNMutableNotificationContent()
-            followUp.title = "⏰ Pause läuft noch!"
-            followUp.body = "Du bist seit \(minutes + (i * 5)) Minuten in der Pause."
+            followUp.title = L10n.notifPauseStillRunning
+            followUp.body = L10n.notifPauseStillBody(minutes + (i * 5))
             followUp.sound = .default
             followUp.interruptionLevel = .timeSensitive
             followUp.categoryIdentifier = "PAUSE_REMINDER"
@@ -791,13 +860,13 @@ class SessionManager: ObservableObject {
             breakReminderFired = true
             
             let content = UNMutableNotificationContent()
-            content.title = "☕ Zeit für eine Pause"
+            content.title = L10n.notifBreakTime
             if settings.breakReminderMode == "afterHours" {
                 let hours = settings.breakReminderAfterHours
                 let hoursText = hours == Double(Int(hours)) ? "\(Int(hours))" : String(format: "%.1f", hours)
-                content.body = "Du arbeitest seit \(hoursText) Stunden. Gönn dir eine kurze Pause!"
+                content.body = L10n.notifBreakAfterHours(hoursText)
             } else {
-                content.body = "Geplante Erinnerung: Zeit für eine Pause!"
+                content.body = L10n.notifBreakScheduled
             }
             content.sound = .default
             content.interruptionLevel = .timeSensitive
@@ -825,8 +894,8 @@ class SessionManager: ObservableObject {
             let hoursText = hours == Double(Int(hours)) ? "\(Int(hours))" : String(format: "%.1f", hours)
             
             let content = UNMutableNotificationContent()
-            content.title = "🏁 Feierabend!"
-            content.body = "Du hast \(hoursText) Stunden erreicht. Zeit zum Ausstempeln!"
+            content.title = L10n.notifEndOfDay
+            content.body = L10n.notifEndOfDayBody(hoursText)
             content.sound = .default
             content.interruptionLevel = .timeSensitive
             
@@ -871,10 +940,17 @@ class SessionManager: ObservableObject {
             }
         }
         
+        flextimeRefreshTimer = Timer.scheduledTimer(withTimeInterval: flextimeRefreshInterval, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                await self?.fetchFlextimeStatus()
+            }
+        }
+        
         liveTimeTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 guard let self = self, self.isWorking, !self.isDataStale else { return }
                 self.todayWorkedMinutes = self.liveWorkedMinutes
+                self.saldoMinutes = self.currentFlextimeMinutes
                 
                 // Check time-based notifications
                 self.resetDailyReminders()
@@ -883,7 +959,7 @@ class SessionManager: ObservableObject {
             }
         }
         
-        [keepAliveTimer, refreshTimer, liveTimeTimer].compactMap { $0 }.forEach {
+        [keepAliveTimer, refreshTimer, liveTimeTimer, flextimeRefreshTimer].compactMap { $0 }.forEach {
             RunLoop.main.add($0, forMode: .common)
         }
         
@@ -894,6 +970,7 @@ class SessionManager: ObservableObject {
         keepAliveTimer?.invalidate(); keepAliveTimer = nil
         refreshTimer?.invalidate(); refreshTimer = nil
         liveTimeTimer?.invalidate(); liveTimeTimer = nil
+        flextimeRefreshTimer?.invalidate(); flextimeRefreshTimer = nil
         cancelPauseReminder()
         cancelWorkReminders()
     }
@@ -965,7 +1042,20 @@ class SessionManager: ObservableObject {
     
     /// Manual refresh from UI
     func manualRefresh() async {
+        await fetchFlextimeStatus()
         await fetchBookings()
+    }
+    
+    /// Get bookings for a specific date from the 7-day cache
+    func bookingsForDate(_ dateString: String) -> [BookingEntry] {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        guard let targetDate = formatter.date(from: dateString) else { return [] }
+        let targetDay = Calendar.current.startOfDay(for: targetDate)
+        
+        return allBookings
+            .filter { Calendar.current.startOfDay(for: $0.date) == targetDay }
+            .sorted { $0.date < $1.date }  // Chronological for history view
     }
     
     
@@ -1042,13 +1132,13 @@ enum AidaError: LocalizedError {
     
     var errorDescription: String? {
         switch self {
-        case .invalidSession: return "Session abgelaufen."
-        case .invalidCredentials: return "Anmeldekennung oder Passwort falsch."
-        case .invalidResponse: return "Ungültige Server-Antwort."
-        case .bookingFailed: return "Buchung fehlgeschlagen."
-        case .bookingRejected(let msg): return "Buchung abgelehnt: \(msg)"
-        case .serverError(let code): return "Server-Fehler (\(code))."
-        case .noConnection: return "Keine Verbindung zum Server."
+        case .invalidSession: return L10n.errorSessionExpired
+        case .invalidCredentials: return L10n.errorInvalidCredentials
+        case .invalidResponse: return L10n.errorInvalidResponse
+        case .bookingFailed: return L10n.errorBookingFailed
+        case .bookingRejected(let msg): return L10n.errorBookingRejected(msg)
+        case .serverError(let code): return L10n.errorServerError(code)
+        case .noConnection: return L10n.errorNoConnection
         }
     }
 }

@@ -1,170 +1,145 @@
-# AIDA MenuBar
+<p align="center">
+  <img src="assets/app-icon.png" width="128" height="128" alt="AIDA MenuBar Icon">
+</p>
 
-Native macOS MenuBar-App für die AIDA Zeiterfassung bei Bike24.
+<h1 align="center">AIDA MenuBar</h1>
+
+<p align="center">
+  A native macOS menu bar app for AIDA time tracking at Bike24.<br>
+  Built with Swift and SwiftUI — fast, lightweight, and always one click away.
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Platform-macOS_13+-blue?logo=apple" alt="Platform">
+  <img src="https://img.shields.io/badge/Swift-5.9-F05138?logo=swift&logoColor=white" alt="Swift">
+  <img src="https://img.shields.io/badge/SwiftUI-4.0-007AFF?logo=swift&logoColor=white" alt="SwiftUI">
+  <img src="https://img.shields.io/badge/License-Internal-lightgrey" alt="License">
+  <img src="https://img.shields.io/badge/Language-DE%20%7C%20EN-green" alt="Language">
+</p>
+
+> **⚠️ Internal Tool** — This app requires Bike24 VPN access and AIDA credentials. It is not intended for public use.
+
+---
 
 ## Features
 
-- **Live-Zeitanzeige** in der Menüleiste (optional)
-- **Kommen/Gehen/Pause** buchen mit einem Klick
-- **Tagesübersicht** mit Soll/Ist, Fortschrittsbalken und Flexzeit-Saldo
-- **Heutige Buchungen** als Verlauf
-- **Automatische Synchronisierung** alle 60 Sekunden
-- **VPN-Erkennung** mit Auto-Reconnect
-- **Pause-Erinnerung** als persistente Benachrichtigung
-- **Dark Mode** Support
+### Core
+- **Live time display** in the macOS menu bar (optional)
+- **One-click booking** — Clock in, clock out, start/stop break
+- **Real-time flextime balance** — cumulative account with live calculation
+- **Today's bookings** — chronological timeline of all entries
+- **Past days overview** — compact 7-day history with inline bookings
 
-## Systemanforderungen
+### Smart
+- **Auto-sync** every 60 seconds with server-side recalculation
+- **VPN detection** with auto-reconnect and offline indicators
+- **Break reminders** — configurable notifications (after X hours or at fixed time)
+- **End-of-day reminder** — don't forget to clock out
+- **Pause duration tracking** with persistent notifications
 
-- macOS 13.0 (Ventura) oder neuer
-- Bike24 VPN-Verbindung (OpenVPN)
-- AIDA-Zugangsdaten (Bike24-Kennung)
+### Polish
+- **Bilingual UI** — German and English, switchable in-app or follows system language
+- **Dark Mode** support
+- **Keychain integration** — secure credential storage
+- **Auto-login** on app launch with saved credentials
+- **Update checker** with download link
+
+## Screenshots
+
+<!-- TODO: Add screenshots -->
+
+## Requirements
+
+- macOS 13.0 (Ventura) or later
+- Bike24 VPN connection (OpenVPN)
+- AIDA credentials (Bike24 login)
 
 ## Installation
 
-### Für Nutzer (vorkompilierte App)
+### For Users
 
-1. `AidaMenuBar.app` in den **Applications**-Ordner ziehen
-2. Beim ersten Öffnen: **Rechtsklick → Öffnen → Bestätigen** (unsignierte App)
-3. Die App erscheint als Uhr-Icon in der Menüleiste
-4. VPN verbinden und mit Bike24-Kennung anmelden
+1. Download `AidaMenuBar.app.zip` from the latest [Release](../../releases)
+2. Unzip and move `AidaMenuBar.app` to your **Applications** folder
+3. **First launch** (app is unsigned — macOS Gatekeeper will block it by default):
+   - **Right-click** (or Control-click) on the app → **Open** → click **Open** in the dialog
+   - If you see *"AidaMenuBar can't be opened"* without an Open option:
+     1. Go to **System Settings → Privacy & Security**
+     2. Scroll down — you'll see a message like *"AidaMenuBar was blocked"*
+     3. Click **Open Anyway** → confirm with your password or Touch ID
+   - This is only required once. After that the app opens normally.
+4. Connect to Bike24 VPN and sign in with your AIDA credentials
 
-### Für Entwickler (aus Xcode)
+### For Developers
 
 ```bash
+git clone https://github.com/arnuquint/AidaMenuBar.git
+cd AidaMenuBar
 open AidaMenuBar.xcodeproj
 ```
 
-1. Target **"My Mac"** auswählen
-2. `Cmd+R` zum Builden & Starten
-3. Für Release: `Product → Archive → Distribute App → Copy App`
+1. Select target **"My Mac"**
+2. `Cmd+R` to build & run
+3. For release: `Product → Archive → Distribute App → Copy App`
 
-## Einrichtung
-
-1. **Bike24 VPN verbinden** (OpenVPN)
-2. App aus der Menüleiste öffnen (Uhr-Icon)
-3. Mit **Bike24-Kennung** anmelden (gleiche Daten wie AIDA im Browser)
-4. Optional: "Angemeldet bleiben" aktivieren (speichert Credentials im Keychain)
-
-Die App meldet sich automatisch an wenn sie gespeicherte Credentials findet.
-
-## Bedienung
-
-### MenuBar
-
-| Icon | Bedeutung |
-|------|-----------|
-| 🕐 `clock` | Idle (nicht eingestempelt) |
-| 🕐 `clock.fill` | Anwesend (eingestempelt) |
-| ⚠️ `clock.badge.exclamationmark` | Keine VPN-Verbindung |
-
-Optional wird die aktuelle Arbeitszeit neben dem Icon angezeigt (in Einstellungen aktivierbar).
-
-### Popover
-
-- **Status-Badge** zeigt: Anwesend (grün), Abwesend (grau), Pause (blau), Offline (orange)
-- **Kommen/Gehen** Buttons zum Ein-/Ausstempeln
-- **Pause starten/beenden** für Pausenbuchung
-- **Heutige Buchungen** als chronologische Liste
-- **↻ Refresh** erzwingt sofortige Datenaktualisierung
-- **⏻ Beenden** schließt die App (mit Bestätigungsdialog)
-
-### Einstellungen (⚙️)
-
-- **Arbeitszeit in Menüleiste**: Zeit neben Icon anzeigen
-- **Pause-Erinnerung**: Benachrichtigung nach konfigurierbarer Zeit
-- **Abmelden**: Credentials löschen und ausloggen
-
-## Architektur
+## Architecture
 
 ```
 AidaMenuBar/
-├── AidaMenuBarApp.swift      # App Entry, MenuBar Setup, AppDelegate
-├── ContentView.swift         # Popover UI (Main View, Settings, Login, Logo)
-├── SessionManager.swift      # API, Auth, Timer, VPN, State Management
-├── KeychainService.swift     # macOS Keychain Integration
-├── SettingsManager.swift     # UserDefaults für App-Einstellungen
-├── LoginView.swift           # Legacy (deprecated, unused)
-├── SettingsView.swift        # Legacy (minimal, für macOS Settings Scene)
-└── Assets.xcassets/          # App Icon, AIDA Favicon, Colors
+├── AidaMenuBarApp.swift       # App entry, MenuBar setup, AppDelegate
+├── ContentView.swift          # Main popover UI (timeline, settings, login)
+├── SessionManager.swift       # API client, auth, timers, VPN, state
+├── SettingsManager.swift      # UserDefaults for app preferences
+├── KeychainService.swift      # macOS Keychain integration
+├── UpdateChecker.swift        # GitHub release version check
+├── L10n.swift                 # Localization wrapper (DE/EN)
+├── Localizable.xcstrings      # String catalog (all translations)
+├── AidaLogoView.swift         # AIDA pyramid logo (SVG → Canvas)
+└── Assets.xcassets/           # App icon, colors
 ```
 
-### Data Fetch Flow
+### Data Flow
 
 ```
-Timer (60 sec)
-  ↓
-fetchBookings()
-  ↓
-POST RechneBisHeute     → Server recalculates Ist-Zeit (empty response)
-  ↓
-GET buchungen_7Tage     → Fresh: times, bookings, dailyAccValue
-  ↓
-serverWorkedMinutes = times[today][1]
-lastDataFetchTime = now
-  ↓
-Live Timer (1 sec):
-  todayWorkedMinutes = serverWorkedMinutes + minutesSince(lastDataFetchTime)
+Timer (60s) → RechneBisHeute (server recalc) → buchungen_7Tage (fresh data)
+                                                        ↓
+                                              Parse: times, bookings, saldo
+                                                        ↓
+Live Timer (1s) → Interpolate worked minutes since last server fetch
+                                                        ↓
+                                              Flextime = Vortag + Today's Saldo
 ```
 
-> **Wichtig:** Ohne den `RechneBisHeute`-Aufruf liefert `buchungen_7Tage` gecachte Werte.
-> Dieser Trigger zwingt den Server, die aktuelle Ist-Zeit neu zu berechnen.
+### API Endpoints
 
-### Timer-Konfiguration
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `central/sessions/` | POST | Login |
+| `central/sessions/{id}` | GET | Session validation / Keep-alive |
+| `taims/rpc?` | POST | Book time (Clock in/out/break) |
+| `taims/rpc?` | POST | `RechneBisHeute` — trigger server recalculation |
+| `taims/rpc/buchungen_7Tage` | GET | Bookings, times, daily saldo |
+| `taims/rpc/trafficlightstatus` | GET | Cumulative flextime balance |
 
-| Timer | Intervall | Zweck |
-|-------|-----------|-------|
-| Keep-Alive | 20 min | Session-Timeout verhindern |
-| Data Refresh | 60 sec | RechneBisHeute + buchungen_7Tage |
-| Live Time | 1 sec | Interpolation zwischen Server-Fetches |
-| VPN Retry | 3 sec | Server-Erreichbarkeit prüfen (max. 15×) |
+## Localization
 
-### API-Endpoints
+The app supports **German** and **English**. Language can be:
+- **Automatic** — follows macOS system language (default)
+- **Manual** — set in Settings → Display → Language, or via the 🌐 globe icon on the login screen
 
-| Endpoint | Methode | Beschreibung |
-|----------|---------|--------------|
-| `central/sessions/` | POST | Login (principalName + password) |
-| `central/sessions/{id}` | GET | Session validieren / Keep-Alive |
-| `taims/rpc?` | POST | Buchung (Kommen/Gehen/Pause) |
-| `taims/rpc?` | POST | `{"__knopf": "RechneBisHeute"}` – Server-Recalc |
-| `taims/rpc/buchungen_7Tage` | GET | Buchungen, Zeiten, Saldo |
+All translations are managed in `Localizable.xcstrings` using Xcode's String Catalog format.
 
-### VPN-Erkennung
+## Distribution
 
-Die App nutzt `NWPathMonitor` um Netzwerkänderungen zu erkennen. Bei jeder Änderung wird ein Server-Reachability-Check durchgeführt:
-
-- **VPN deaktiviert** → Server nicht erreichbar → Banner + Platzhalter + Auto-Retry
-- **VPN aktiviert** → Server erreichbar → Auto-Login + Daten laden
-- **Sleep/Wake** → Session validieren, ggf. Re-Login
-
-## Fehlerbehebung
-
-### "Keine VPN-Verbindung"
-→ Bike24 VPN (OpenVPN) verbinden. Die App erkennt die Verbindung automatisch.
-
-### "Session abgelaufen"
-→ Login-Formular erscheint automatisch. Bei gespeicherten Credentials erfolgt Re-Login im Hintergrund.
-
-### App lässt sich nicht öffnen ("nicht verifizierter Entwickler")
-→ Rechtsklick auf App → "Öffnen" → Bestätigen. Nur beim ersten Mal nötig.
-
-### Zeit stimmt nicht mit AIDA Dashboard überein
-→ Refresh-Button (↻) klicken. Die App erzwingt dann eine Server-Neuberechnung.
-
-### Buchung wird abgelehnt
-→ Status prüfen (bereits eingestempelt?). AIDA erlaubt keine doppelten Kommen/Gehen-Buchungen.
-
-## Verteilung an Kollegen
-
-Die App ist generisch – keine persönlichen Daten sind eingebacken. Jeder Bike24-Mitarbeiter mit VPN-Zugang und AIDA-Credentials kann die App nutzen.
+The app is generic — no personal data is baked in. Any Bike24 employee with VPN access and AIDA credentials can use it.
 
 1. In Xcode: `Product → Archive → Distribute App → Copy App`
-2. `.app`-Datei per Slack, Mail oder SharePoint teilen
-3. Empfänger: App in Applications-Ordner ziehen, Rechtsklick → Öffnen
+2. Share `.app` file via Slack, email, or SharePoint
+3. Recipient: Move to Applications, right-click → Open
 
 ## Changelog
 
-Siehe [CHANGELOG.md](CHANGELOG.md)
+See [CHANGELOG.md](CHANGELOG.md)
 
-## Lizenz
+## License
 
-Internes Tool für Bike24.
+Internal tool for Bike24. Not for public distribution.

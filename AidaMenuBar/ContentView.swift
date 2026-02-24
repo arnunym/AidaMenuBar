@@ -3,6 +3,7 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject var sessionManager: SessionManager
     @EnvironmentObject var settingsManager: SettingsManager
+    @EnvironmentObject var updateChecker: UpdateChecker
     @State private var showingSettings = false
     
     // Inline login state
@@ -17,6 +18,8 @@ struct ContentView: View {
     enum RefreshButtonState {
         case idle, refreshing, success
     }
+    
+    // (no extra state needed for timeline view)
     
     var body: some View {
         VStack(spacing: 0) {
@@ -40,10 +43,14 @@ struct ContentView: View {
             }
         }
         .frame(width: 320)
+        .id(settingsManager.appLanguage)  // Force full re-render on language change
         .onAppear {
             if let creds = KeychainService.shared.loadCredentials() {
                 loginUsername = creds.username
             }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .popoverWillOpen)) { _ in
+            showingSettings = false
         }
     }
     
@@ -55,11 +62,11 @@ struct ContentView: View {
         HStack(spacing: 8) {
             if showingSettings {
                 Button(action: { withAnimation(.easeInOut(duration: 0.15)) { showingSettings = false } }) {
-                    HStack(spacing: 3) {
+                    HStack(spacing: 4) {
                         Image(systemName: "chevron.backward")
-                            .font(.system(size: 14, weight: .semibold))
-                        Text("Einstellungen")
-                            .font(.system(size: 14, weight: .semibold))
+                            .font(.system(size: 12, weight: .semibold))
+                        Text(L10n.settings)
+                            .font(.system(size: 13, weight: .semibold))
                     }
                     .foregroundColor(.accentColor)
                     .contentShape(Rectangle())
@@ -68,7 +75,7 @@ struct ContentView: View {
             } else {
                 AidaLogoView(size: 22, color: colorScheme == .dark ? .white : Color(red: 0, green: 0.271, blue: 0.514))
                 
-                Text("AIDA Zeiterfassung")
+                Text(L10n.appTitle)
                     .font(.system(size: 13, weight: .semibold))
             }
             
@@ -76,9 +83,18 @@ struct ContentView: View {
             
             if !showingSettings {
                 Button(action: { withAnimation(.easeInOut(duration: 0.15)) { showingSettings = true } }) {
-                    Image(systemName: "gearshape")
-                        .font(.system(size: 14))
-                        .foregroundColor(.secondary)
+                    ZStack(alignment: .topTrailing) {
+                        Image(systemName: "gearshape")
+                            .font(.system(size: 14))
+                            .foregroundColor(.secondary)
+                        
+                        if updateChecker.updateAvailable {
+                            Circle()
+                                .fill(.red)
+                                .frame(width: 7, height: 7)
+                                .offset(x: 2, y: -2)
+                        }
+                    }
                 }
                 .buttonStyle(.plain)
             }
@@ -97,12 +113,12 @@ struct ContentView: View {
                 .font(.caption)
             
             VStack(alignment: .leading, spacing: 1) {
-                Text("Keine VPN-Verbindung")
+                Text(L10n.vpnDisconnected)
                     .font(.caption)
                     .fontWeight(.medium)
                     .foregroundColor(.white)
                 
-                Text(sessionManager.isReconnecting ? "Verbinde..." : "VPN verbinden um fortzufahren")
+                Text(sessionManager.isReconnecting ? L10n.vpnConnecting : L10n.vpnConnectHint)
                     .font(.caption2)
                     .foregroundColor(.white.opacity(0.8))
             }
@@ -132,12 +148,12 @@ struct ContentView: View {
     private var loginView: some View {
         VStack(spacing: 14) {
             VStack(spacing: 10) {
-                TextField("Anmeldekennung", text: $loginUsername)
+                TextField(L10n.loginUsername, text: $loginUsername)
                     .textFieldStyle(.roundedBorder)
                     .textContentType(.username)
                     .font(.system(size: 13))
                 
-                SecureField("Passwort", text: $loginPassword)
+                SecureField(L10n.loginPassword, text: $loginPassword)
                     .textFieldStyle(.roundedBorder)
                     .textContentType(.password)
                     .font(.system(size: 13))
@@ -145,7 +161,7 @@ struct ContentView: View {
             }
             
             HStack {
-                Toggle("Angemeldet bleiben", isOn: $loginRememberMe)
+                Toggle(L10n.loginRememberMe, isOn: $loginRememberMe)
                     .font(.caption)
                     .toggleStyle(.checkbox)
                 
@@ -157,7 +173,7 @@ struct ContentView: View {
                             ProgressView()
                                 .scaleEffect(0.7)
                         } else {
-                            Text("Anmelden")
+                            Text(L10n.loginButton)
                         }
                     }
                     .frame(width: 80, height: 24)
@@ -177,13 +193,44 @@ struct ContentView: View {
                 .multilineTextAlignment(.center)
             }
             
-            HStack(spacing: 4) {
-                Image(systemName: "lock.shield")
-                    .font(.caption2)
-                Text("VPN-Verbindung erforderlich")
-                    .font(.caption2)
+            HStack {
+                HStack(spacing: 4) {
+                    Image(systemName: "lock.shield")
+                        .font(.caption2)
+                    Text(L10n.loginVPNRequired)
+                        .font(.caption2)
+                }
+                .foregroundColor(.secondary)
+                
+                Spacer()
+                
+                Menu {
+                    Button(action: { settingsManager.appLanguage = "auto" }) {
+                        HStack {
+                            Text(L10n.languageAutoLabel)
+                            if settingsManager.appLanguage == "auto" { Image(systemName: "checkmark") }
+                        }
+                    }
+                    Button(action: { settingsManager.appLanguage = "de" }) {
+                        HStack {
+                            Text("Deutsch")
+                            if settingsManager.appLanguage == "de" { Image(systemName: "checkmark") }
+                        }
+                    }
+                    Button(action: { settingsManager.appLanguage = "en" }) {
+                        HStack {
+                            Text("English")
+                            if settingsManager.appLanguage == "en" { Image(systemName: "checkmark") }
+                        }
+                    }
+                } label: {
+                    Image(systemName: "globe")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .menuStyle(.borderlessButton)
+                .fixedSize()
             }
-            .foregroundColor(.secondary)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 16)
@@ -221,7 +268,8 @@ struct ContentView: View {
                         .multilineTextAlignment(.center)
                 }
                 
-                recentBookingsView
+                todayBookingsView
+                pastDaysView
             }
             .padding(.vertical, 12)
         }
@@ -268,11 +316,11 @@ struct ContentView: View {
     }
     
     private var statusLabel: String {
-        if !sessionManager.isVPNConnected { return "Offline" }
-        if sessionManager.isDataStale { return "Aktualisiere..." }
-        if sessionManager.isPaused { return "Pause" }
-        if sessionManager.isWorking { return "Anwesend" }
-        return "Abwesend"
+        if !sessionManager.isVPNConnected { return L10n.statusOffline }
+        if sessionManager.isDataStale { return L10n.statusUpdating }
+        if sessionManager.isPaused { return L10n.statusPause }
+        if sessionManager.isWorking { return L10n.statusOnline }
+        return L10n.statusAbsent
     }
     
     // MARK: - Time Summary
@@ -284,8 +332,9 @@ struct ContentView: View {
     
     private var timeSummaryView: some View {
         VStack(spacing: 8) {
+            // Today's worked time
             HStack(alignment: .firstTextBaseline) {
-                Text("Heute")
+                Text(L10n.today)
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                 Spacer()
@@ -301,6 +350,7 @@ struct ContentView: View {
                 }
             }
             
+            // Progress bar
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
                     RoundedRectangle(cornerRadius: 3)
@@ -314,6 +364,7 @@ struct ContentView: View {
             }
             .frame(height: 6)
             
+            // Soll + Today's saldo
             HStack {
                 Text("/ \(formatMinutes(sessionManager.todaySollMinutes))")
                     .font(.caption2)
@@ -321,20 +372,44 @@ struct ContentView: View {
                 
                 Spacer()
                 
+                if showPlaceholders {
+                    Text("\(L10n.today) –:–– h")
+                        .font(.system(.caption2, design: .monospaced))
+                        .foregroundColor(.secondary)
+                } else {
+                    let todaySaldo = sessionManager.todayWorkedMinutes - sessionManager.todaySollMinutes
+                    Text("\(L10n.today) \(formatSaldo(todaySaldo))")
+                        .font(.system(.caption2, design: .monospaced))
+                        .foregroundColor(todaySaldo >= 0 ? .green : .orange)
+                }
+            }
+            
+            // Divider
+            Divider()
+                .padding(.vertical, 2)
+            
+            // Flextime account (cumulative)
+            HStack {
                 HStack(spacing: 4) {
-                    Text("Saldo")
+                    Image(systemName: "chart.line.uptrend.xyaxis")
                         .font(.caption2)
                         .foregroundColor(.secondary)
-                    
-                    if showPlaceholders {
-                        Text("–:–– h")
-                            .font(.system(.caption2, design: .monospaced))
-                            .foregroundColor(.secondary)
-                    } else {
-                        Text(formatSaldo(sessionManager.saldoMinutes))
-                            .font(.system(.caption2, design: .monospaced))
-                            .foregroundColor(sessionManager.saldoMinutes >= 0 ? .green : .red)
-                    }
+                    Text(L10n.flextimeAccount)
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+                
+                if showPlaceholders {
+                    Text("–:–– h")
+                        .font(.system(.caption, design: .monospaced))
+                        .foregroundColor(.secondary)
+                } else {
+                    Text(formatSaldo(sessionManager.saldoMinutes))
+                        .font(.system(.caption, design: .monospaced))
+                        .fontWeight(.medium)
+                        .foregroundColor(sessionManager.saldoMinutes >= 0 ? .green : .red)
                 }
             }
             
@@ -343,7 +418,7 @@ struct ContentView: View {
                     Image(systemName: "pause.circle.fill")
                         .font(.caption2)
                         .foregroundColor(.blue)
-                    Text("Pause: \(sessionManager.formattedPauseDuration)")
+                    Text(L10n.pauseDuration(sessionManager.formattedPauseDuration))
                         .font(.caption2)
                         .foregroundColor(.blue)
                 }
@@ -387,7 +462,7 @@ struct ContentView: View {
                     HStack(spacing: 6) {
                         Image(systemName: "play.fill")
                             .font(.caption)
-                        Text("Kommen")
+                        Text(L10n.clockIn)
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
@@ -402,7 +477,7 @@ struct ContentView: View {
                     HStack(spacing: 6) {
                         Image(systemName: "stop.fill")
                             .font(.caption)
-                        Text("Gehen")
+                        Text(L10n.clockOut)
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
@@ -424,7 +499,7 @@ struct ContentView: View {
                 HStack(spacing: 6) {
                     Image(systemName: sessionManager.isPaused ? "play.circle.fill" : "pause.circle.fill")
                         .font(.caption)
-                    Text(sessionManager.isPaused ? "Pause beenden" : "Pause starten")
+                    Text(sessionManager.isPaused ? L10n.endBreak : L10n.startBreak)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 8)
@@ -442,23 +517,23 @@ struct ContentView: View {
         .padding(.horizontal, 16)
     }
     
-    // MARK: - Recent Bookings
+    // MARK: - Today's Bookings
     
-    private var recentBookingsView: some View {
+    private var todayBookingsView: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Heutige Buchungen")
+            Text(L10n.todayBookings)
                 .font(.caption2)
                 .foregroundColor(.secondary)
                 .textCase(.uppercase)
                 .padding(.horizontal, 16)
             
             if sessionManager.recentBookings.isEmpty {
-                Text("Keine Buchungen heute")
+                Text(L10n.noBookingsToday)
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .padding(.horizontal, 16)
             } else {
-                ForEach(Array(sessionManager.recentBookings.prefix(6))) { booking in
+                ForEach(Array(sessionManager.recentBookings.prefix(8))) { booking in
                     HStack(spacing: 8) {
                         Image(systemName: iconForBookingType(booking.type))
                             .font(.caption2)
@@ -479,6 +554,154 @@ struct ContentView: View {
                 }
             }
         }
+    }
+    
+    // MARK: - Past Days Timeline
+    
+    /// Past workdays from the 7-day window (excluding today and weekends), newest first
+    private var pastWorkdays: [SessionManager.DayTimeEntry] {
+        sessionManager.weeklyTimes
+            .filter { !$0.isToday && !$0.isWeekend }
+            .sorted { $0.date > $1.date }
+    }
+    
+    private var pastDaysView: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if !pastWorkdays.isEmpty {
+                Text(L10n.pastDays)
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                    .textCase(.uppercase)
+                    .padding(.horizontal, 16)
+                
+                VStack(spacing: 0) {
+                    ForEach(Array(pastWorkdays.enumerated()), id: \.element.id) { index, day in
+                        pastDayRow(day)
+                        
+                        if index < pastWorkdays.count - 1 {
+                            Divider()
+                                .padding(.horizontal, 10)
+                        }
+                    }
+                }
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color(NSColor.controlBackgroundColor))
+                )
+                .padding(.horizontal, 16)
+            }
+        }
+    }
+    
+    private func pastDayRow(_ day: SessionManager.DayTimeEntry) -> some View {
+        let dayBookings = sessionManager.bookingsForDate(day.date)
+        
+        return VStack(alignment: .leading, spacing: 4) {
+            // Day header: weekday, date, ist/soll, saldo
+            HStack(spacing: 6) {
+                Text(formatWeekday(day.date))
+                    .font(.system(.caption, design: .default))
+                    .fontWeight(.medium)
+                    .foregroundColor(.secondary)
+                    .frame(width: 24, alignment: .leading)
+                
+                Text(formatShortDate(day.date))
+                    .font(.system(.caption2, design: .monospaced))
+                    .foregroundColor(.secondary)
+                
+                Spacer()
+                
+                if showPlaceholders {
+                    Text("–:––")
+                        .font(.system(.caption, design: .monospaced))
+                        .foregroundColor(.secondary)
+                } else {
+                    Text(formatMinutes(day.istMinutes))
+                        .font(.system(.caption, design: .monospaced))
+                        .foregroundColor(.secondary)
+                    
+                    Text("/")
+                        .font(.caption2)
+                        .foregroundColor(.secondary.opacity(0.4))
+                    
+                    Text(formatMinutes(day.sollMinutes))
+                        .font(.system(.caption2, design: .monospaced))
+                        .foregroundColor(.secondary)
+                    
+                    Text(formatDaySaldo(day.saldoMinutes))
+                        .font(.system(.caption2, design: .monospaced))
+                        .foregroundColor(day.saldoMinutes >= 0 ? .green : .orange)
+                        .frame(width: 42, alignment: .trailing)
+                }
+            }
+            
+            // Compact booking line
+            if !dayBookings.isEmpty {
+                HStack(spacing: 0) {
+                    ForEach(Array(dayBookings.enumerated()), id: \.element.id) { index, booking in
+                        if index > 0 {
+                            Text("  ")
+                                .font(.caption2)
+                        }
+                        
+                        Image(systemName: compactIcon(booking.type))
+                            .font(.system(size: 8))
+                            .foregroundColor(colorForBookingType(booking.type))
+                        
+                        Text(formatBookingTimeShort(booking.date))
+                            .font(.system(.caption2, design: .monospaced))
+                            .foregroundColor(.secondary.opacity(0.7))
+                    }
+                    
+                    Spacer()
+                }
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+    }
+    
+    // MARK: - Timeline Helpers
+    
+    private func formatWeekday(_ dateString: String) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        guard let date = formatter.date(from: dateString) else { return "?" }
+        
+        let dayFormatter = DateFormatter()
+        dayFormatter.locale = Locale.current  // Follows system language
+        dayFormatter.dateFormat = "EE"
+        return dayFormatter.string(from: date)
+    }
+    
+    private func formatShortDate(_ dateString: String) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        guard let date = formatter.date(from: dateString) else { return dateString }
+        
+        let outFormatter = DateFormatter()
+        outFormatter.dateFormat = "dd.MM."
+        return outFormatter.string(from: date)
+    }
+    
+    private func formatDaySaldo(_ minutes: Int) -> String {
+        let sign = minutes >= 0 ? "+" : ""
+        return String(format: "%@%d:%02d", sign, abs(minutes) / 60, abs(minutes) % 60)
+    }
+    
+    private func compactIcon(_ type: Int) -> String {
+        switch type {
+        case 1: return "arrow.right"
+        case 2: return "arrow.left"
+        case 0: return "pause"
+        default: return "questionmark"
+        }
+    }
+    
+    private func formatBookingTimeShort(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        return formatter.string(from: date)
     }
     
     private func iconForBookingType(_ type: Int) -> String {
@@ -531,7 +754,7 @@ struct ContentView: View {
             .buttonStyle(.plain)
             .foregroundColor(.secondary)
             .disabled(refreshState != .idle || !sessionManager.isVPNConnected)
-            .help("Daten aktualisieren")
+            .help(L10n.refreshData)
             
             Spacer()
             
@@ -544,21 +767,21 @@ struct ContentView: View {
             }
             .buttonStyle(.plain)
             .foregroundColor(.secondary)
-            .help("App beenden")
+            .help(L10n.quitApp)
             .popover(isPresented: $showQuitConfirm, arrowEdge: .bottom) {
                 VStack(spacing: 10) {
-                    Text("App beenden?")
+                    Text(L10n.quitConfirmTitle)
                         .font(.subheadline)
                         .fontWeight(.medium)
                     
                     HStack(spacing: 8) {
-                        Button("Abbrechen") {
+                        Button(L10n.cancel) {
                             showQuitConfirm = false
                         }
                         .buttonStyle(.bordered)
                         .controlSize(.small)
                         
-                        Button("Beenden") {
+                        Button(L10n.quit) {
                             NSApp.terminate(nil)
                         }
                         .buttonStyle(.borderedProminent)
@@ -597,49 +820,56 @@ struct ContentView: View {
     private var settingsInlineView: some View {
         VStack(spacing: 0) {
             Form {
-                Section("Anzeige") {
-                    Toggle("Arbeitszeit in Menüleiste", isOn: $settingsManager.showTimeInMenuBar)
+                Section(L10n.settingsDisplay) {
+                    Toggle(L10n.settingsShowTime, isOn: $settingsManager.showTimeInMenuBar)
                         .font(.system(size: 13))
+                    
+                    Picker(L10n.settingsLanguage, selection: $settingsManager.appLanguage) {
+                        Text(L10n.languageAutoLabel).tag("auto")
+                        Text("Deutsch").tag("de")
+                        Text("English").tag("en")
+                    }
+                    .font(.system(size: 13))
                 }
                 
-                Section("Während Pause") {
-                    Toggle("Pause-Ende erinnern", isOn: $settingsManager.pauseReminderEnabled)
+                Section(L10n.settingsDuringPause) {
+                    Toggle(L10n.settingsPauseReminder, isOn: $settingsManager.pauseReminderEnabled)
                         .font(.system(size: 13))
                     
                     if settingsManager.pauseReminderEnabled {
-                        Picker("Erinnerung nach", selection: $settingsManager.pauseReminderMinutes) {
-                            Text("15 Min").tag(15)
-                            Text("30 Min").tag(30)
-                            Text("45 Min").tag(45)
-                            Text("60 Min").tag(60)
+                        Picker(L10n.settingsReminderAfter, selection: $settingsManager.pauseReminderMinutes) {
+                            Text(L10n.minutes(15)).tag(15)
+                            Text(L10n.minutes(30)).tag(30)
+                            Text(L10n.minutes(45)).tag(45)
+                            Text(L10n.minutes(60)).tag(60)
                         }
                         .font(.system(size: 13))
                     }
                 }
                 
-                Section("Pause-Erinnerung") {
-                    Toggle("An Pause erinnern", isOn: $settingsManager.breakReminderEnabled)
+                Section(L10n.settingsBreakReminder) {
+                    Toggle(L10n.settingsRemindBreak, isOn: $settingsManager.breakReminderEnabled)
                         .font(.system(size: 13))
                     
                     if settingsManager.breakReminderEnabled {
-                        Picker("Modus", selection: $settingsManager.breakReminderMode) {
-                            Text("Nach Arbeitszeit").tag("afterHours")
-                            Text("Zu fester Uhrzeit").tag("atTime")
+                        Picker(L10n.settingsMode, selection: $settingsManager.breakReminderMode) {
+                            Text(L10n.settingsModeAfterHours).tag("afterHours")
+                            Text(L10n.settingsModeAtTime).tag("atTime")
                         }
                         .font(.system(size: 13))
                         
                         if settingsManager.breakReminderMode == "afterHours" {
-                            Picker("Nach", selection: $settingsManager.breakReminderAfterHours) {
-                                Text("3 Stunden").tag(3.0)
-                                Text("3,5 Stunden").tag(3.5)
-                                Text("4 Stunden").tag(4.0)
-                                Text("4,5 Stunden").tag(4.5)
-                                Text("5 Stunden").tag(5.0)
+                            Picker(L10n.settingsAfter, selection: $settingsManager.breakReminderAfterHours) {
+                                Text(L10n.hours(3)).tag(3.0)
+                                Text(L10n.hours(3.5)).tag(3.5)
+                                Text(L10n.hours(4)).tag(4.0)
+                                Text(L10n.hours(4.5)).tag(4.5)
+                                Text(L10n.hours(5)).tag(5.0)
                             }
                             .font(.system(size: 13))
                         } else {
                             HStack {
-                                Text("Uhrzeit")
+                                Text(L10n.settingsTime)
                                     .font(.system(size: 13))
                                 Spacer()
                                 Picker("", selection: $settingsManager.breakReminderAtHour) {
@@ -661,18 +891,18 @@ struct ContentView: View {
                     }
                 }
                 
-                Section("Feierabend") {
-                    Toggle("Feierabend erinnern", isOn: $settingsManager.endOfDayReminderEnabled)
+                Section(L10n.settingsEndOfDay) {
+                    Toggle(L10n.settingsEndOfDayReminder, isOn: $settingsManager.endOfDayReminderEnabled)
                         .font(.system(size: 13))
                     
                     if settingsManager.endOfDayReminderEnabled {
-                        Picker("Nach", selection: $settingsManager.endOfDayReminderHours) {
-                            Text("7 Stunden").tag(7.0)
-                            Text("7,5 Stunden").tag(7.5)
-                            Text("8 Stunden").tag(8.0)
-                            Text("8,5 Stunden").tag(8.5)
-                            Text("9 Stunden").tag(9.0)
-                            Text("10 Stunden").tag(10.0)
+                        Picker(L10n.settingsAfter, selection: $settingsManager.endOfDayReminderHours) {
+                            Text(L10n.hours(7)).tag(7.0)
+                            Text(L10n.hours(7.5)).tag(7.5)
+                            Text(L10n.hours(8)).tag(8.0)
+                            Text(L10n.hours(8.5)).tag(8.5)
+                            Text(L10n.hours(9)).tag(9.0)
+                            Text(L10n.hours(10)).tag(10.0)
                         }
                         .font(.system(size: 13))
                     }
@@ -682,7 +912,7 @@ struct ContentView: View {
                     Button(action: openNotificationSettings) {
                         HStack(spacing: 4) {
                             Image(systemName: "info.circle")
-                            Text("Hinweise-Stil für persistente Erinnerungen")
+                            Text(L10n.settingsNotificationHint)
                         }
                         .font(.caption2)
                         .foregroundColor(.secondary)
@@ -690,18 +920,18 @@ struct ContentView: View {
                     .buttonStyle(.plain)
                 }
                 
-                Section("Konto") {
+                Section(L10n.settingsAccount) {
                     if sessionManager.isAuthenticated {
                         HStack {
                             Image(systemName: "checkmark.circle.fill")
                                 .foregroundColor(.green)
                                 .font(.caption)
-                            Text("Angemeldet als \(sessionManager.userName)")
+                            Text(L10n.settingsLoggedInAs(sessionManager.userName))
                                 .font(.system(size: 13))
                         }
                     }
                     
-                    Button("Abmelden") {
+                    Button(L10n.settingsLogout) {
                         sessionManager.logout()
                         withAnimation(.easeInOut(duration: 0.15)) { showingSettings = false }
                     }
@@ -712,12 +942,71 @@ struct ContentView: View {
                 
                 Section {
                     HStack {
-                        Text("Version")
+                        Text(L10n.settingsVersion)
                             .font(.system(size: 13))
                         Spacer()
                         Text(AppVersion.fullVersion)
                             .font(.system(.caption, design: .monospaced))
                             .foregroundColor(.secondary)
+                    }
+                    
+                    if updateChecker.updateAvailable {
+                        Button(action: { updateChecker.openDownloadPage() }) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "arrow.down.circle.fill")
+                                    .foregroundColor(.white)
+                                    .font(.system(size: 14))
+                                
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text(L10n.settingsUpdateAvailable(updateChecker.latestVersion))
+                                        .font(.system(size: 12, weight: .semibold))
+                                        .foregroundColor(.white)
+                                    Text(L10n.settingsClickToDownload)
+                                        .font(.caption2)
+                                        .foregroundColor(.white.opacity(0.8))
+                                }
+                                
+                                Spacer()
+                                
+                                Image(systemName: "chevron.right")
+                                    .font(.caption)
+                                    .foregroundColor(.white.opacity(0.6))
+                            }
+                            .padding(.vertical, 6)
+                            .padding(.horizontal, 10)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color.accentColor)
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    } else if updateChecker.isUpToDate {
+                        HStack(spacing: 4) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.caption2)
+                                .foregroundColor(.green)
+                            Text(L10n.settingsUpToDate)
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                    } else {
+                        Button(action: { updateChecker.checkForUpdates() }) {
+                            HStack(spacing: 4) {
+                                if updateChecker.isChecking {
+                                    ProgressView()
+                                        .scaleEffect(0.5)
+                                        .frame(width: 14, height: 14)
+                                } else {
+                                    Image(systemName: "arrow.clockwise")
+                                        .font(.caption2)
+                                }
+                                Text(L10n.settingsCheckUpdates)
+                                    .font(.caption2)
+                            }
+                            .foregroundColor(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(updateChecker.isChecking)
                     }
                 }
             }
