@@ -33,9 +33,9 @@
 			</dict>
 		</dict>
 	</dict>
-	<key>NSSupportsSuddenTermination</key>
-	<false/>
 	<key>NSSupportsAutomaticTermination</key>
+	<false/>
+	<key>NSSupportsSuddenTermination</key>
 	<false/>
 </dict>
 </plist>

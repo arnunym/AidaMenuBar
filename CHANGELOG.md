@@ -2,81 +2,81 @@
 
 ## v1.1.0 (2026-02-24)
 
-### Neue Features
+### New Features
 
-- **Pause-Icon in der Menüleiste:** Wenn eine Pause aktiv ist, wechselt das Icon zu ⏸ (`pause.circle`) – so sieht man auf einen Blick den Pause-Status
-- **Feierabend-Erinnerung:** Benachrichtigung nach konfigurierbarer Arbeitszeit (7–10 Stunden). Einstellbar unter ⚙️ → Feierabend
-- **Pause-Erinnerung (Pause einlegen):** Erinnerung, eine Pause zu machen – entweder nach X Stunden Arbeit (3–5h) oder zu einer festen Uhrzeit. Einstellbar unter ⚙️ → Pause-Erinnerung
-- **Verbesserte VPN-Erkennung:** Sofortige Reaktion auf VPN-Disconnect über proaktiven Server-Reachability-Check bei jeder Netzwerkänderung (statt bis zu 60 Sek Verzögerung)
+- **Pause icon in menu bar:** When a break is active, the icon switches to ⏸ (`pause.circle`) for at-a-glance status
+- **End of day reminder:** Notification after configurable work hours (7–10 hours). Configurable under ⚙️ → End of Day
+- **Break reminder:** Reminder to take a break – either after X hours of work (3–5h) or at a fixed time of day. Configurable under ⚙️ → Break Reminder
+- **Improved VPN detection:** Instant response to VPN disconnect via proactive server reachability check on every network change (instead of up to 60 sec delay)
 
-### Bugfixes
+### Bug Fixes
 
-- **App schließt sich nicht mehr von selbst:** `disableSuddenTermination` und `disableAutomaticTermination` verhindern, dass macOS die App als "inaktiv" beendet
-- **VPN-Platzhalter korrekt:** Zeit und Saldo zeigen jetzt sofort "–:––" wenn VPN getrennt wird
+- **App no longer quits silently:** `disableSuddenTermination` and `disableAutomaticTermination` prevent macOS from killing the app as "inactive"
+- **VPN placeholders fixed:** Time and balance now immediately show "–:––" when VPN disconnects
 
-### Einstellungen erweitert
+### Settings
 
-- Einstellungen-Bereich neu strukturiert: "Während Pause", "Pause-Erinnerung", "Feierabend" als eigene Sektionen
-- Pause-Erinnerung mit zwei Modi: "Nach Arbeitszeit" oder "Zu fester Uhrzeit" mit Stunden/Minuten-Auswahl
+- Settings reorganized into separate sections: "During Break", "Break Reminder", "End of Day"
+- Break reminder with two modes: "After work hours" or "At fixed time" with hour/minute picker
 
 ---
 
-## v1.0.0 – Erster Release (2026-02-12)
+## v1.0.0 – Initial Release (2026-02-12)
 
-Die erste öffentliche Version der AIDA MenuBar App – eine native macOS MenuBar-App für die Bike24-Zeiterfassung.
+First public version of the AIDA MenuBar app – a native macOS menu bar app for AIDA time tracking.
 
 ### Features
 
-**Zeiterfassung**
-- Live-Zeitanzeige in der macOS-Menüleiste (optional)
-- Kommen/Gehen/Pause buchen direkt aus der MenuBar
-- Tagesübersicht mit Soll/Ist-Vergleich und Fortschrittsbalken
-- Saldo-Anzeige (Flexzeit-Konto)
-- Heutige Buchungen als Liste
-- Automatische Synchronisierung alle 60 Sekunden
+**Time Tracking**
+- Live time display in the macOS menu bar (optional)
+- Clock in/out/pause directly from the menu bar
+- Daily overview with target/actual comparison and progress bar
+- Balance display (flextime account)
+- Today's bookings as a list
+- Automatic sync every 60 seconds
 
-**Anmeldung & Sicherheit**
-- Native Login mit Bike24-Kennung (kein WebView)
-- Credentials sicher im macOS Keychain gespeichert
-- Automatische Anmeldung beim App-Start
-- Session Keep-Alive (kein Timeout bei Inaktivität)
-- Automatische Re-Authentifizierung bei Session-Ablauf
+**Authentication & Security**
+- Native login with company credentials (no WebView)
+- Credentials securely stored in macOS Keychain
+- Automatic login on app start
+- Session keep-alive (no timeout during inactivity)
+- Automatic re-authentication on session expiry
 
-**VPN-Handling**
-- Automatische Erkennung von VPN-Verbindungsstatus
-- Sofortige Reaktion auf VPN-Änderungen (connect/disconnect)
-- Platzhalter-Anzeige bei fehlender VPN-Verbindung
-- Auto-Reconnect mit Retry-Mechanismus (max. 15 Versuche)
-- VPN-Banner mit Status-Information
+**VPN Handling**
+- Automatic VPN connection status detection
+- Instant response to VPN changes (connect/disconnect)
+- Placeholder display when VPN is disconnected
+- Auto-reconnect with retry mechanism (max 15 attempts)
+- VPN warning banner with status info
 
-**Pause-Erinnerung**
-- Konfigurierbare Erinnerung nach 15/30/45/60 Minuten
-- Persistente Benachrichtigungen (Follow-ups alle 5 Min)
-- Automatische Stornierung bei Pause-Ende
+**Break Reminder**
+- Configurable reminder after 15/30/45/60 minutes
+- Persistent notifications (follow-ups every 5 min)
+- Automatic cancellation when break ends
 
 **UI & UX**
-- AIDA Pyramid Logo (offizielles Favicon)
-- Dark Mode Support (Logo wechselt zu Weiß)
-- Inline-Einstellungen (kein separates Fenster)
-- Refresh-Button mit visuellem Feedback (Spinner → Häkchen)
-- Quit-Bestätigung zum Schutz vor versehentlichem Schließen
-- Kompaktes, natives macOS-Design
-- Status-Badge: Anwesend/Abwesend/Pause/Offline
+- AIDA Pyramid logo (official favicon)
+- Dark Mode support (logo switches to white)
+- Inline settings (no separate window)
+- Refresh button with visual feedback (spinner → checkmark)
+- Quit confirmation to prevent accidental closure
+- Compact, native macOS design
+- Status badge: Present/Absent/Break/Offline
 
-**Technisch**
-- Server-Cache-Workaround via `RechneBisHeute` Trigger
-- Live-Timer interpoliert zwischen Server-Fetches
-- Wake-from-Sleep & Screen-Unlock Handling
-- Self-Signed Certificate Support (Bike24 intern)
+**Technical**
+- Server cache workaround via `RechneBisHeute` trigger
+- Live timer interpolates between server fetches
+- Wake-from-sleep & screen unlock handling
+- Self-signed certificate support
 
-### Systemanforderungen
+### System Requirements
 
-- macOS 13.0 (Ventura) oder neuer
-- Bike24 VPN-Verbindung (OpenVPN)
-- AIDA-Zugangsdaten (Bike24-Kennung)
+- macOS 13.0 (Ventura) or later
+- VPN connection to AIDA server
+- AIDA credentials
 
-### Bekannte Einschränkungen
+### Known Limitations
 
-- Keine Kostenstelle-Auswahl bei Buchungen (nutzt Standard-Kostenstelle)
-- Keine Wochen-/Monatsübersicht
-- App muss bei macOS-Updates ggf. neu gestartet werden
+- No cost center selection for bookings (uses default)
+- No weekly/monthly overview
+- App may need restart after macOS updates

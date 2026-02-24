@@ -7,7 +7,7 @@
       "layers" : [
         {
           "fill" : "none",
-          "glass" : false,
+          "glass" : true,
           "hidden" : false,
           "image-name" : "aida-logo.svg",
           "name" : "aida-logo",
