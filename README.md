@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/app-icon.png" width="128" height="128" alt="AIDA MenuBar Icon">
+  <img src="assets/app-icon.png" width="256" height="256" alt="AIDA MenuBar Icon">
 </p>
 
 <h1 align="center">AIDA MenuBar</h1>
