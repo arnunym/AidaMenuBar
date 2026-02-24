@@ -13,11 +13,11 @@
   <img src="https://img.shields.io/badge/Platform-macOS_13+-blue?logo=apple" alt="Platform">
   <img src="https://img.shields.io/badge/Swift-5.9-F05138?logo=swift&logoColor=white" alt="Swift">
   <img src="https://img.shields.io/badge/SwiftUI-4.0-007AFF?logo=swift&logoColor=white" alt="SwiftUI">
-  <img src="https://img.shields.io/badge/License-Internal-lightgrey" alt="License">
+  <img src="https://img.shields.io/badge/License-GPL--2.0-blue" alt="License">
   <img src="https://img.shields.io/badge/Language-DE%20%7C%20EN-green" alt="Language">
 </p>
 
-> **⚠️ Internal Tool** — This app requires Bike24 VPN access and AIDA credentials. It is not intended for public use.
+> **🚧 Early Development** — AIDA MenuBar is currently in active development and only available for internal use with a VPN connection to the AIDA server for Bike24. A public version with broader compatibility is planned for a future release.
 
 ---
 
@@ -51,8 +51,8 @@
 ## Requirements
 
 - macOS 13.0 (Ventura) or later
-- Bike24 VPN connection (OpenVPN)
-- AIDA credentials (Bike24 login)
+- VPN connection to the AIDA server
+- AIDA user credentials
 
 ## Installation
 
@@ -67,7 +67,7 @@
      2. Scroll down — you'll see a message like *"AidaMenuBar was blocked"*
      3. Click **Open Anyway** → confirm with your password or Touch ID
    - This is only required once. After that the app opens normally.
-4. Connect to Bike24 VPN and sign in with your AIDA credentials
+4. Connect to VPN and sign in with your AIDA credentials
 
 ### For Developers
 
@@ -130,7 +130,7 @@ All translations are managed in `Localizable.xcstrings` using Xcode's String Cat
 
 ## Distribution
 
-The app is generic — no personal data is baked in. Any Bike24 employee with VPN access and AIDA credentials can use it.
+The app is generic — no personal data is baked in. Anyone with VPN access and AIDA credentials can use it.
 
 1. In Xcode: `Product → Archive → Distribute App → Copy App`
 2. Share `.app` file via Slack, email, or SharePoint
@@ -142,4 +142,4 @@ See [CHANGELOG.md](CHANGELOG.md)
 
 ## License
 
-Internal tool for Bike24. Not for public distribution.
+This project is licensed under the [GPL-2.0 License](LICENSE).
