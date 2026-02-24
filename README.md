@@ -5,7 +5,7 @@
 <h1 align="center">AIDA MenuBar</h1>
 
 <p align="center">
-  A native macOS menu bar app for AIDA time tracking at Bike24.<br>
+  A native macOS menu bar app for AIDA time tracking.<br>
   Built with Swift and SwiftUI — fast, lightweight, and always one click away.
 </p>
 
