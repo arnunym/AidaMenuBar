@@ -52,7 +52,9 @@
 
 ## Screenshots
 
-<!-- TODO: Add screenshots -->
+<p align="left">
+  <img src="assets/aida-screenshot.png" alt="Screenshot of App Screens">
+</p>
 
 ## Requirements
 
